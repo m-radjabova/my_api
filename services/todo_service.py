@@ -1,4 +1,5 @@
 from schema.todo import Todo
+from fastapi import HTTPException
 
 
 class TodoService:
@@ -27,7 +28,7 @@ class TodoService:
                 return todo
         return None
     
-    def add_toda(self, todo: Todo):
+    def add_todo(self, todo: Todo):
         todo_data = todo.dict()
         todo_data["id"] = len(self.todos) + 1
         self.todos.append(todo_data)
@@ -38,7 +39,7 @@ class TodoService:
             if todo["id"] == todo_id:
                 self.todos.remove(todo)
                 return todo
-        return None
+        return HTTPException(status_code=404, detail="Todo not found")
     
     def update_todo(self, todo_id: int, todo: Todo):
         todo = todo.dict()
@@ -46,11 +47,18 @@ class TodoService:
             if t["id"] == todo_id:
                 t.update(todo)
                 return t
-        return None
+        return HTTPException(status_code=404, detail="Todo not found")
     
     def toggle_todo(self, todo_id: int):
         for todo in self.todos:
             if todo["id"] == todo_id:
                 todo["completed"] = not todo["completed"]
                 return todo
-        return None
+        return HTTPException(status_code=404, detail="Todo not found")
+    
+    def get_todos_by_userId(self, user_id: int):
+        new_todos = []
+        for todo in self.todos:
+            if todo["user_id"] == user_id:
+                new_todos.append(todo)
+        return new_todos
