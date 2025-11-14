@@ -9,10 +9,9 @@ router = APIRouter(
 )
 user_service = UserService()
 
-
 @router.get("/", status_code=HTTPStatus.OK)
-async def get_users():
-    return user_service.get_users()
+async def get_users(username: str = None, page: int = 1, limit: int = 10):
+    return user_service.get_users(username, page, limit)
 
 @router.post("/", status_code=HTTPStatus.CREATED)
 async def add_user(user: User):
@@ -29,12 +28,3 @@ async def delete_user(user_id: int):
 @router.put("/{user_id}")
 async def update_user(user_id: int, req_user: User):
     return user_service.update_user(user_id, req_user)  
-
-@router.patch("/{user_id}/age/increment")
-async def increment_age(user_id: int):
-    return user_service.increment_age(user_id)
-
-@router.patch("/{user_id}/age/decrement")
-async def decrement_age(user_id: int):
-    return user_service.decrement_age(user_id)
-
