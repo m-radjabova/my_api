@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import HTTPException
 
 
@@ -9,8 +10,8 @@ class UserService:
                 "username": "John Doe",
                 "email": "9yX5k@example.com",
                 "address": {
-                    "street": "123 Main St",
-                    "city": "Anytown",
+                    "street": "Turon Street",
+                    "city": "Bukhara",
                 },
             },
             {
@@ -19,7 +20,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Bukhara",
                 },
             },
             {
@@ -28,7 +29,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Samarkand",
                 },
             },
             {
@@ -37,7 +38,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Navoiy",
                 },
             },
             {
@@ -46,7 +47,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Navoiy",
                 },
             },
             {
@@ -55,7 +56,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Xorazm",
                 },
             },
             {
@@ -64,7 +65,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Samarkand",
                 },
             },
             {
@@ -73,7 +74,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Bukhara",
                 },
             },
             {
@@ -82,7 +83,7 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Bukhara",
                 },
             },
             {
@@ -91,14 +92,14 @@ class UserService:
                 "email": "9yX5k@example.com",
                 "address": {
                     "street": "123 Main St",
-                    "city": "Anytown",
+                    "city": "Samarkand",
                 },
             },
         ]
 
-    def get_users(self, username=None, page=1, limit=4):
-        if username:
-            filtered = self.__get_users_by_username(username)
+    def get_users(self, cities: List[str] = None, page=1, limit=10):
+        if cities:
+            filtered = self.__get_users_by_cities(cities)
         else:
             filtered = self.users
 
@@ -116,14 +117,24 @@ class UserService:
             "limit": limit,
             "pages": (total + limit - 1) // limit
         }
-
-
-    def __get_users_by_username(self, username):
-        arr = []
+    
+    def get_cities(self):
+        cities = set()
         for user in self.users:
-            if username.lower() in user["username"].lower():
-                arr.append(user)
-        return arr
+            cities.add(user["address"]["city"])
+        return list(cities)
+
+    def __get_users_by_cities(self, cities):
+        if not cities:
+            return self.users
+
+        cities = [c.lower() for c in cities]
+
+        return [
+            user for user in self.users
+            if user["address"]["city"].lower() in cities
+        ]
+
 
     def get_user(self, user_id):
         for user in self.users:
@@ -150,18 +161,4 @@ class UserService:
             if u["id"] == user_id:
                 u.update(user)
                 return u
-        return HTTPException(status_code=404, detail="User not found")
-
-    def increment_age(self, user_id):
-        for user in self.users:
-            if user["id"] == user_id:
-                user["age"] += 1
-                return user
-        return HTTPException(status_code=404, detail="User not found")
-
-    def decrement_age(self, user_id):
-        for user in self.users:
-            if user["id"] == user_id:
-                user["age"] -= 1
-                return user
         return HTTPException(status_code=404, detail="User not found")

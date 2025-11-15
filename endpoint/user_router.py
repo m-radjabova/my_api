@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from fastapi import APIRouter
+from typing import Annotated, List
+from fastapi import APIRouter, Query
 from schema.user import User
 from services.user_service import UserService
 
@@ -10,8 +11,12 @@ router = APIRouter(
 user_service = UserService()
 
 @router.get("/", status_code=HTTPStatus.OK)
-async def get_users(username: str = None, page: int = 1, limit: int = 10):
-    return user_service.get_users(username, page, limit)
+async def get_users(cities: Annotated[list[str] | None, Query()] = None, page: int = 1, limit: int = 10):
+    return user_service.get_users(cities, page, limit)
+
+@router.get("/cities", status_code=HTTPStatus.OK)
+async def get_cities():
+    return user_service.get_cities()
 
 @router.post("/", status_code=HTTPStatus.CREATED)
 async def add_user(user: User):
