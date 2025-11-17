@@ -11,12 +11,8 @@ router = APIRouter(
 user_service = UserService()
 
 @router.get("/", status_code=HTTPStatus.OK)
-async def get_users(cities: Annotated[list[str] | None, Query()] = None, page: int = 1, limit: int = 10):
-    return user_service.get_users(cities, page, limit)
-
-@router.get("/cities", status_code=HTTPStatus.OK)
-async def get_cities():
-    return user_service.get_cities()
+async def get_users():
+    return user_service.get_users()
 
 @router.post("/", status_code=HTTPStatus.CREATED)
 async def add_user(user: User):
