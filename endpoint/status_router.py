@@ -22,3 +22,8 @@ async def add_status_task(status_type: str):
 @router.get("/list", response_model=List[Status], status_code=HTTPStatus.OK)
 async def get_task_status():
     return status_service.get_status_task()
+
+
+@router.delete("/delete/{status_id}", status_code=HTTPStatus.NO_CONTENT)
+async def delete_status(status_id: int):
+    return status_service.delete_status(status_id)

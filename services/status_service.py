@@ -6,7 +6,22 @@ class StatusService:
         self.statues = ("TODO", "INPROGRESS", "VERIFIED", "DONE")
 
         self.taskStatues = [
-
+            {
+                "id": 1,
+                "title": "TODO",
+            },
+            {
+                "id": 2,
+                "title": "INPROGRESS",
+            },
+            {
+                "id": 3,
+                "title": "VERIFIED",
+            },
+            {
+                "id": 4,
+                "title": "DONE",
+            },
         ]
 
     def get_status_type(self):
