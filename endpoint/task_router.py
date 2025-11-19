@@ -1,35 +1,38 @@
-from fastapi import APIRouter
-from schema.status import StatusType
-from schema.task import Task
+from fastapi import APIRouter, HTTPException
+from typing import List
+from schema.task import RequestTask, ResponseTask, Task
 from services.task_service import TaskService
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 tasks_service = TaskService()
 
 
-@router.get("/", status_code=200)
+@router.get("/task-status", status_code=200)
+async def get_tasks_status():
+    return tasks_service.get_task_status()
+
+
+@router.get("/", response_model=List[ResponseTask])
 async def get_tasks():
     return tasks_service.get_tasks()
 
 
-@router.post("/", status_code=201)
-async def add_task(task: Task):
-    return tasks_service.add_task(task)
+@router.post("/", response_model=Task, status_code=201)
+async def create_task(task: RequestTask):
+    return tasks_service.create_task(task)
 
 
-@router.get("/priority", status_code=200)
-async def get_task_priority():
-    return tasks_service.get_task_priority()
+@router.put("/{task_id}", response_model=Task)
+async def update_task(task_id: int, task: RequestTask):
+    updated = tasks_service.update_task(task_id, task)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return updated
 
-@router.get("/status/{status}", status_code=200)
-async def get_tasks_by_status(status: StatusType):
-    return tasks_service.get_tasks_by_status(status)
 
-
-@router.delete("/{task_id}", status_code=200)
+@router.delete("/{task_id}", status_code=204)
 async def delete_task(task_id: int):
-    return tasks_service.delete_task(task_id)
-
-@router.put("/{task_id}", status_code=200)
-async def update_task(task_id: int, task: Task):
-    return tasks_service.update_task(task_id, task)
+    deleted = tasks_service.delete_task(task_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return None

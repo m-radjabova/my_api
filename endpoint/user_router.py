@@ -21,11 +21,3 @@ async def add_user(user: User):
 @router.get("/{user_id}", status_code=HTTPStatus.OK)
 async def get_user(user_id: int):
     return user_service.get_user(user_id)
-
-@router.delete("/{user_id}", status_code=HTTPStatus.NO_CONTENT)
-async def delete_user(user_id: int):
-    return user_service.delete_user(user_id)
-
-@router.put("/{user_id}")
-async def update_user(user_id: int, req_user: User):
-    return user_service.update_user(user_id, req_user)  

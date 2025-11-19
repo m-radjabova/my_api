@@ -1,95 +1,68 @@
 import datetime
-
-from fastapi import HTTPException
-
-from schema.status import StatusType
-from schema.task import Task
+from schema.task import RequestTask
 
 class TaskService:
     def __init__(self):
-        self.priority = ("HIGH", "MEDIUM", "LOW")
+        self.status_tasks = ["TODO", "IN_PROGRESS", "VERIFIED", "DONE"]
         self.tasks = [
             {
                 "id": 1,
                 "title": "Task 1",
                 "description": "Description 1",
                 "status": "TODO",
-                "assignee": ["Muslima Radjabova", "Daler Ismatov"],
-                "priority": ["HIGH"],
+                "assignees": [
+                     {
+                        "id": 1,
+                        "username": "Muslima Radjabova",
+                        "email": "muslima@gmail.com",
+                    },
+                    {
+                        "id": 2,
+                        "username": "Daler Ismatov",
+                        "email": "ismatov@gmail.com",
+                    }
+                ],
+                "priority": "HIGH",
                 "end_date": "2023-08-01",
                 "created_date": "2023-07-01",
-            },
-            {
-                "id": 2,
-                "title": "Task 2",
-                "description": "Description 2",
-                "status": "INPROGRESS",
-                "assignee": ["Muslima Radjabova", "Daler Ismatov"],
-                "priority": ["MEDIUM"],
-                "end_date": "2023-08-01",
-                "created_date": "2023-07-01",
-            },
-            {
-                "id": 3,
-                "title": "Task 3",
-                "description": "Description 3",
-                "status": "VERIFIED",
-                "assignee": ["Muslima Radjabova", "Daler Ismatov"],
-                "priority": ["LOW"],
-                "end_date": "2023-08-01",
-                "created_date": "2023-07-01",
-            },
-            {
-                "id": 4,
-                "title": "Task 4",
-                "description": "Description 4",
-                "status": "DONE",
-                "assignee": ["Muslima Radjabova", "Daler Ismatov"],
-                "priority": ["HIGH"],
-                "end_date": "2023-08-01",
-                "created_date": "2023-07-01",
-            },
+            }
         ]
 
+    def get_task_status(self):
+        return self.status_tasks
+    
     def get_tasks(self):
-        return self.tasks
-    
-    def get_task_priority(self):
-        return self.priority
+        tasks = []
+        for status in self.status_tasks:
+            tasks.append({
+                "status": status,
+                "tasks": self.__get_status_tasks(status)
+            })
+        return tasks
 
-
-    def add_task(self, task: Task):
-        new_task = {
-            "id": len(self.tasks) + 1,
-            "title": task.title,
-            "description": task.description,
-            "status": task.status,
-            "assignee": task.assignee,
-            "priority": task.priority,
-            "end_date": task.end_date,
-            "created_date": datetime.datetime.now().strftime("%Y-%m-%d"),
-        }
-        self.tasks.append(new_task)
-        return new_task
-    
-    def get_tasks_by_status(self, status: StatusType):
+    def __get_status_tasks(self, status):
         return [task for task in self.tasks if task["status"] == status]
-    
-    def delete_task(self, task_id: int):
-        for task in self.tasks:
+
+    def create_task(self, task_data: RequestTask):
+        task_dict = task_data.model_dump()
+        task_dict["id"] = len(self.tasks) + 1
+        task_dict["created_date"] = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.tasks.append(task_dict)
+        return task_dict
+
+    def update_task(self, task_id: int, task_data: RequestTask):
+        for i, task in enumerate(self.tasks):
             if task["id"] == task_id:
-                self.tasks.remove(task)
-                return task
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    def update_task(self, task_id: int, task: Task):
-        for t in self.tasks:
-            if t["id"] == task_id:
-                t["title"] = task.title
-                t["description"] = task.description
-                t["status"] = task.status
-                t["assignee"] = task.assignee
-                t["priority"] = task.priority
-                t["end_date"] = task.end_date
-                return t
-        raise HTTPException(status_code=404, detail="Task not found")
+                updated = task_data.model_dump()
+                updated["id"] = task_id
+                updated["created_date"] = task["created_date"] 
+                self.tasks[i] = updated
+                return updated
+        return None
+
+    def delete_task(self, task_id: int):
+        for i, task in enumerate(self.tasks):
+            if task["id"] == task_id:
+                del self.tasks[i]
+                return True
+        return False
