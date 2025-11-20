@@ -12,9 +12,18 @@ async def get_tasks_status():
     return tasks_service.get_task_status()
 
 
-@router.get("/", response_model=List[ResponseTask])
-async def get_tasks():
-    return tasks_service.get_tasks()
+@router.get("/")
+def get_tasks(
+    assignee_id: int | None = None,
+    priority: str | None = None,
+    from_date: str | None = None
+):
+    return tasks_service.get_tasks(
+        assignee_id=assignee_id,
+        priority=priority,
+        from_date=from_date
+    )
+
 
 
 @router.post("/", response_model=Task, status_code=201)
@@ -36,3 +45,4 @@ async def delete_task(task_id: int):
     if not deleted:
         raise HTTPException(status_code=404, detail="Task not found")
     return None
+

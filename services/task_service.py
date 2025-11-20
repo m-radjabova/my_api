@@ -29,16 +29,39 @@ class TaskService:
         ]
 
     def get_task_status(self):
-        return self.status_tasks
+         return self.status_tasks
+
     
-    def get_tasks(self):
-        tasks = []
-        for status in self.status_tasks:
-            tasks.append({
+    def get_tasks(self,
+              assignee_id: int | None = None,
+              priority: str | None = None,
+              from_date: str | None = None):
+
+        filtered = self.tasks.copy()  
+
+        if assignee_id:
+            filtered = [
+                t for t in filtered
+                if any(a["id"] == assignee_id for a in t["assignees"])
+            ]
+
+        if priority and priority != "ALL":
+            filtered = [t for t in filtered if t["priority"] == priority]
+
+        if from_date:
+            filtered = [
+                t for t in filtered
+                if t["created_date"] >= from_date
+            ]
+
+        return [
+            {
                 "status": status,
-                "tasks": self.__get_status_tasks(status)
-            })
-        return tasks
+                "tasks": [t for t in filtered if t["status"] == status]
+            }
+            for status in self.status_tasks
+        ]
+
 
     def __get_status_tasks(self, status):
         return [task for task in self.tasks if task["status"] == status]
@@ -66,3 +89,5 @@ class TaskService:
                 del self.tasks[i]
                 return True
         return False
+    
+
