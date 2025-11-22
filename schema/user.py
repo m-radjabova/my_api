@@ -1,4 +1,5 @@
 
+from typing import List
 from pydantic import BaseModel, EmailStr, Field
 
 class User(BaseModel):
@@ -9,3 +10,11 @@ class User(BaseModel):
 class RequestUser(BaseModel):
     username: str = Field(..., min_length=5)
     email: EmailStr
+
+class Team(BaseModel):
+    id: int
+    name: str
+    members: List[User]
+
+class RequestTeam(BaseModel):
+    name: str

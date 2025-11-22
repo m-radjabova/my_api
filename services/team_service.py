@@ -1,15 +1,12 @@
 from typing import List
 from fastapi import HTTPException
 from schema.user import RequestUser, RequestTeam
+from services.user_service import UserService
 
-class UserService:
+user_service = UserService()
+
+class TeamService:
     def __init__(self):
-        self.users = [
-            {"id": 1, "username": "Muslima Radjabova", "email": "muslima@gmail.com"},
-            {"id": 2, "username": "Daler Ismatov", "email": "ismatov@gmail.com"},
-            {"id": 3, "username": "Hasan Rasulov", "email": "hasan@gmail.com"},
-        ]
-
         self.teams = [
             {
                 "id": 1,
@@ -35,44 +32,14 @@ class UserService:
             },
         ]
 
-    def get_users(self):
-        return self.users
-
-    def get_user(self, user_id: int):
-        for user in self.users:
-            if user["id"] == user_id:
-                return user
-        raise HTTPException(status_code=404, detail="User not found")
-
-    def create_user(self, user_data: RequestUser):
-        user_dict = user_data.model_dump()
-        user_dict["id"] = len(self.users) + 1
-        self.users.append(user_dict)
-        return user_dict
-
-    def delete_user(self, user_id: int):
-        for i, user in enumerate(self.users):
-            if user["id"] == user_id:
-                del self.users[i]
-                return {"message": "User deleted successfully"}
-        raise HTTPException(status_code=404, detail="User not found")
-
-    def update_user(self, user_id: int, user_data: RequestUser):
-        for i, user in enumerate(self.users):
-            if user["id"] == user_id:
-                updated = user_data.model_dump()
-                updated["id"] = user_id
-                self.users[i] = updated
-                return updated
-        raise HTTPException(status_code=404, detail="User not found")
-
     def get_teams(self):
         return self.teams
 
     def create_team(self, team_data: RequestTeam):
         team_dict = team_data.model_dump()
         team_dict["id"] = len(self.teams) + 1
-        team_dict["members"] = [self.get_user(member_id) for member_id in team_dict["members"]]
+        team_dict["members"] = []
+        
         self.teams.append(team_dict)
         return team_dict
 
@@ -95,3 +62,25 @@ class UserService:
                 self.teams[i]["name"] = new_name
                 return self.teams[i]
         raise HTTPException(status_code=404, detail="Team not found")
+
+
+    def add_member_to_team(self, team_id: int, user_id: int):
+        team = self.get_team(team_id)
+        user = user_service.get_user(user_id)
+
+        if any(member["id"] == user_id for member in team["members"]):
+            raise HTTPException(status_code=400, detail="User already in this team")
+
+        team["members"].append(user)
+        return team
+
+    def add_members_to_team(self, team_id: int, user_ids: List[int]):
+        team = self.get_team(team_id)
+        for user_id in user_ids:
+            user = user_service.get_user(user_id)
+            if not any(member["id"] == user_id for member in team["members"]):
+                team["members"].append(user)
+        return team
+
+    def get_user(self, user_id: int):
+        return user_service.get_user(user_id)

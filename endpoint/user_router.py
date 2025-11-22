@@ -1,13 +1,14 @@
 from http import HTTPStatus
 from typing import Annotated, List
 from fastapi import APIRouter, Query
-from schema.user import RequestUser, User
+from schema.user import RequestTeam, RequestUser, User
 from services.user_service import UserService
 
 router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
+
 user_service = UserService()
 
 @router.get("/", status_code=HTTPStatus.OK)
@@ -29,4 +30,5 @@ async def update_user(user_id: int, user: User):
 @router.delete("/{user_id}", status_code=HTTPStatus.NO_CONTENT)
 async def delete_user(user_id: int):
     user_service.delete_user(user_id)
-    return None
+    return HTTPStatus.NO_CONTENT
+
