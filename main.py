@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from endpoint.users_router import router as users_router
 from endpoint.posts_router import router as posts_router
 from endpoint.comment_router import router as comment_router
+from endpoint.todos_router import router as todos_router
 
 # uvicorn main:app --reload
 
@@ -19,4 +20,4 @@ app.add_middleware(
 app.include_router(users_router)
 app.include_router(posts_router)
 app.include_router(comment_router)
-
+app.include_router(todos_router)

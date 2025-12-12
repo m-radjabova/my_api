@@ -51,7 +51,7 @@ class CommentService:
         connect = get_connection()
         cursor = connect.cursor()
         try:
-            cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
+            cursor.execute("DELETE FROM comments WHERE comment_id = %s", (comment_id,))
             connect.commit()
             return JSONResponse(status_code=204, content={"message": "Comment deleted successfully"})
         finally:

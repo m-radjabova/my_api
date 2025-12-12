@@ -7,6 +7,7 @@ from database import get_connection
 class User(BaseModel):
     email: str = Field(..., max_length=256)
     phone_number: str
+    full_name : str
 
 
 class UsersService:
@@ -15,7 +16,7 @@ class UsersService:
         connect = get_connection()
         cursor = connect.cursor()
         try:
-            cursor.execute("SELECT * FROM users")
+            cursor.execute("SELECT * FROM users ORDER BY id ASC")
             return cursor.fetchall()
 
         except Exception as e:
@@ -31,8 +32,8 @@ class UsersService:
         cursor = connect.cursor()
         try:
             cursor.execute(
-                "INSERT INTO users (email, phone_number) VALUES (%s, %s)",
-                (user.email, user.phone_number)
+                "INSERT INTO users (email, phone_number, full_name) VALUES (%s, %s, %s)",
+                (user.email, user.phone_number, user.full_name)
             )
             connect.commit()
 
@@ -66,8 +67,8 @@ class UsersService:
         cursor = connect.cursor()
         try:
             cursor.execute(
-                "UPDATE users SET email=%s, phone_number=%s WHERE id=%s",
-                (user.email, user.phone_number, user_id)
+                "UPDATE users SET email=%s, phone_number=%s, full_name=%s WHERE id=%s",
+                (user.email, user.phone_number, user.full_name, user_id)
             )
             connect.commit()
 
@@ -77,7 +78,8 @@ class UsersService:
             return {
                 "id": user_id,
                 "email": user.email,
-                "phone_number": user.phone_number
+                "phone_number": user.phone_number,
+                "full_name": user.full_name
             }
 
         finally:

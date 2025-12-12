@@ -23,7 +23,6 @@ async def add_user(user: User):
 async def delete_user(user_id: int):
     return users_service.delete_user(user_id)
 
-
 @router.put("/{user_id}", status_code=200)
 async def update_user(user_id: int, user: User):
     return users_service.update_user(user_id, user)
