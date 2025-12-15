@@ -12,8 +12,12 @@ car_service = CarService()
 
 
 @router.get("/", status_code=200)
-async def get_cars():
-    return car_service.get_cars()
+async def get_cars(model: str = None, color: str = None, year: int = None, page: int = 1, limit: int = 10):
+    return car_service.get_cars( model, color, year, page, limit)
+
+@router.get("/colors", status_code=200)
+async def get_colors_from_cars():
+    return car_service.get_color_from_cars()
 
 
 @router.post("/", status_code=201)
