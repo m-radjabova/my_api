@@ -16,6 +16,10 @@ class Car (BaseModel):
 
 
 class CarService:
+    def __init__(self):
+        self.connect = get_connection()
+        self.cursor = self.connect.cursor()
+
     def get_cars(
         self,
         model: str = None,
@@ -28,7 +32,6 @@ class CarService:
         cursor = connect.cursor()
 
         try:
-            page = max(1, page)  
             limit = max(1, min(limit, 100))  
             offset = (page - 1) * limit
             
