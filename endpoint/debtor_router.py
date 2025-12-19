@@ -34,10 +34,13 @@ async def add_debt_to_debtor(debtor_id: int, debt: Debt):
     return debtor_service.add_debt_to_debtor(debtor_id, debt)
 
 
-@router.put("/{debtor_id}/repayment", status_code=200)
-async def debt_repayment(debtor_id: int,payload: RequestPayment):
+@router.post("/{debtor_id}/repayment", status_code=201)
+async def debt_repayment(debtor_id: int, payload: RequestPayment):
     return debtor_service.debt_repayment(
         debtor_id,
         payload.amount
     )
 
+@router.get("/{debtor_id}/debts-history", status_code=200)
+async def debts_history_by_debtor_id(debtor_id: int):
+    return debtor_service.get_debts_history_by_debtor_id(debtor_id)
