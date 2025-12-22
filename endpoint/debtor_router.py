@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from services.debtor_service import Debt, Debtor, DebtorService, RequestPayment
 
@@ -9,6 +10,9 @@ router = APIRouter(
 )
 
 debtor_service = DebtorService()
+
+class RepaymentRequest(BaseModel):
+    amount: int
 
 
 @router.get("/", status_code=200)
@@ -33,6 +37,27 @@ async def create_debtor(debtor: Debtor):
 async def add_debt_to_debtor(debtor_id: int, debt: Debt):
     return debtor_service.add_debt_to_debtor(debtor_id, debt)
 
+
+@router.post("/debt/{debt_id}/repayment", status_code=200)
+async def repay_single_debt(debt_id: int, payload: RepaymentRequest):
+    debt = debtor_service.get_debt_by_id(debt_id)
+    
+    if not debt:
+        raise HTTPException(status_code=404, detail="Debt not found")
+    
+    if debt["status"] == True:
+        raise HTTPException(status_code=400, detail="This debt is already paid")
+    
+    if payload.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than 0")
+    
+    debtor_service.repay_single_debt(debt_id, payload.amount)
+    return {
+        "success": True, 
+        "message": "Debt payment recorded successfully",
+        "debt_id": debt_id,
+        "amount_paid": payload.amount
+    }
 
 @router.post("/{debtor_id}/repayment", status_code=201)
 async def debt_repayment(debtor_id: int, payload: RequestPayment):
