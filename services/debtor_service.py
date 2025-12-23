@@ -134,6 +134,7 @@ class DebtorService:
                         db.amount - COALESCE(SUM(p.amount), 0),
                         0
                     ) AS remaining
+                    
                 FROM debt db
                 LEFT JOIN payment_history p 
                     ON db.debt_id = p.debt_id
@@ -227,59 +228,102 @@ class DebtorService:
     def debt_repayment(self, debtor_id: int, amount: int):
         connect = get_connection()
         cursor = connect.cursor()
-        debts = self.get_debt_by_debtor_id(debtor_id)
-        copy_amount = amount
-
-        for i, debt in enumerate(debts):
-            if debt["status"] == False:
+        
+        try:
+            cursor.execute(
+                """
+                SELECT 
+                    db.debt_id,
+                    db.amount,
+                    db.status,
+                    COALESCE(SUM(p.amount), 0) AS paid_amount,
+                    db.amount - COALESCE(SUM(p.amount), 0) AS remaining
+                FROM debt db
+                LEFT JOIN payment_history p ON db.debt_id = p.debt_id
+                WHERE db.debtor_id = %s AND db.status = False
+                GROUP BY db.debt_id, db.amount, db.status
+                ORDER BY db.date_time ASC
+                """,
+                (debtor_id,)
+            )
+            debts = cursor.fetchall()
+            
+            if not debts:
+                cursor.close()
+                connect.close()
+                return {
+                    "success": False, 
+                    "message": "To'lanmagan qarz topilmadi",
+                    "remaining_amount": amount
+                }
+            
+            remaining_amount = amount
+            processed_debts = []
+            
+            for debt in debts:
+                if remaining_amount <= 0:
+                    break
+                
                 debt_id = debt["debt_id"]
-
-                while copy_amount > 0:
-                    debt = self.get_debt_by_id(debt_id)  
-
-                    if debt["status"] == True:
-                        break  
-
-                    summa = self.get_payments_by_debt_id(debt_id)
-                    remaining_debt = debt["amount"] - summa
-
-                    if copy_amount >= remaining_debt:
-                        cursor.execute(
-                            """
-                            INSERT INTO payment_history (debt_id, amount)
-                            VALUES (%s, %s)
+                debt_remaining = debt["remaining"]
+                
+                if remaining_amount >= debt_remaining:
+                    cursor.execute(
+                        """
+                        INSERT INTO payment_history (debt_id, amount)
+                        VALUES (%s, %s)
                         """,
-                            (debt_id, remaining_debt),
-                        )
-
-                        cursor.execute(
-                            """
-                            UPDATE debt SET status = True WHERE debt_id = %s
+                        (debt_id, debt_remaining)
+                    )
+                    
+                    cursor.execute(
+                        """
+                        UPDATE debt SET status = True WHERE debt_id = %s
                         """,
-                            (debt_id,),
-                        )
-
-                        copy_amount -= remaining_debt
-                        break  
-                    else:
-                        cursor.execute(
-                            """
-                            INSERT INTO payment_history (debt_id, amount)
-                            VALUES (%s, %s)
+                        (debt_id,)
+                    )
+                    
+                    remaining_amount -= debt_remaining
+                    processed_debts.append({
+                        "debt_id": debt_id,
+                        "paid": debt_remaining,
+                        "status": "fully_paid"
+                    })
+                else:
+                    cursor.execute(
+                        """
+                        INSERT INTO payment_history (debt_id, amount)
+                        VALUES (%s, %s)
                         """,
-                            (debt_id, copy_amount),
-                        )
-
-                        copy_amount = 0
-                        break
-
-        connect.commit()
-        cursor.close()
-        connect.close()
-
+                        (debt_id, remaining_amount)
+                    )
+                    
+                    processed_debts.append({
+                        "debt_id": debt_id,
+                        "paid": remaining_amount,
+                        "status": "partially_paid"
+                    })
+                    
+                    remaining_amount = 0
+            
+            connect.commit()
+            
+            return {
+                "success": True,
+                "message": "To'lov muvaffaqiyatli amalga oshirildi",
+                "total_paid": amount,
+                "remaining_amount": remaining_amount,  
+                "processed_debts": processed_debts
+            }
+            
+        except Exception as e:
+            connect.rollback()
+            return {"success": False, "message": str(e)}
+        finally:
+            cursor.close()
+            connect.close()
 
     def get_debts_history_by_debtor_id(self, debtor_id: int):
-        """Debtor'ning barcha qarz va to'lov tarixi"""
         connect = get_connection()
         cursor = connect.cursor()
 
@@ -293,7 +337,7 @@ class DebtorService:
                 """,
                 (debtor_id,),
             )
-            debts = cursor. fetchall()
+            debts = cursor.fetchall()
 
             result = []
 
@@ -309,8 +353,8 @@ class DebtorService:
                     "amount":  debt["amount"],
                     "status": debt["status"],
                     "total_paid": total_paid,
-                    "remaining": remaining,  # ✅ To'g'ri hisoblash
-                    "payments": payments,  # ✅ payment_history_id, date_time, amount mavjud
+                    "remaining": remaining,
+                    "payments": payments,  
                 })
 
             return result
@@ -321,9 +365,8 @@ class DebtorService:
 
 
     def get_payment_history_by_debt_id(self, debt_id: int):
-        """Bitta qarz uchun to'lov tarixi"""
         connect = get_connection()
-        cursor = connect. cursor()
+        cursor = connect.cursor()
         try:
             cursor.execute(
                 """
