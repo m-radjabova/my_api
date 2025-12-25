@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from endpoint.shop_router  import shop_router
 from endpoint.debtor_router import router as debtor_router
 
 # uvicorn main:app --reload
@@ -17,3 +18,4 @@ app.add_middleware(
 
 
 app.include_router(debtor_router)
+app.include_router(shop_router)
